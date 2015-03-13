@@ -52,7 +52,7 @@ bot = function () {
                     if(typeof commands[cmd] !== 'undefined') {
                         commands[cmd].apply(this, parts);
                     } else {
-                        console.warn('command send, but not found in available bot commands');
+                        console.warn('command send, but not found in available bot commands. Command: ' + cmd);
                     }
                 }
             }
