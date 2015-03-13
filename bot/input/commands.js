@@ -80,6 +80,10 @@ module.exports = {
                 region.owned = args[[i * 3] + 1] === settings.get('your_bot');
             }
         }
+    },
+
+    opponentMoves: function () {
+        //stub
     }
 
 };
