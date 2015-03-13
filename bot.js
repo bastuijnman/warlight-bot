@@ -62,5 +62,9 @@ bot = function () {
     };
 };
 
+/**
+ * Initialize bot
+ * __main__
+ */
 var instance = bot();
 instance.run();
