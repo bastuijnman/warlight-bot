@@ -18,19 +18,20 @@ module.exports = {
             io = ioc.resolve('io');
 
         if (action === 'place_armies') {
-            var soliers = parseInt(settings.get('starting_armies'), 10),
+            var soldiers = parseInt(settings.get('starting_armies'), 10),
                 cmd = '';
 
             for (var region in map.regions) {
                 if (map.regions[region].owned) {
-                    io.write(settings.get('your_bot') + ' place_armies ' + map.regions[region].name + ' ' + soldiers);
+                    process.stdout.write(settings.get('your_bot') + ' place_armies ' + map.regions[region].name + ' ' + soldiers + '\n');
                     return;
                 }
             }
+            process.stdout.write('No moves \n');
         }
 
         if (action === 'attack/transfer') {
-            io.write('No moves');
+            process.stdout.write('No moves \n');
         }
     },
 
@@ -54,7 +55,7 @@ module.exports = {
                 return 0;
             }).shift();
 
-        io.write(best.name);
+        process.stdout.write(best.name + '\n');
     },
 
     setupMap: function () {
@@ -67,7 +68,7 @@ module.exports = {
 
     updateMap: function () {
         var args = Array.prototype.slice.call(arguments, 0),
-            count = args / 3,
+            count = args.length / 3,
             map = ioc.resolve('map'),
             settings = ioc.resolve('settings'),
             i = 0,
@@ -77,7 +78,7 @@ module.exports = {
             region = map.getRegion(args[i * 3]);
             if (region) {
                 region.troops = args[(i * 3) + 2];
-                region.owned = args[[i * 3] + 1] === settings.get('your_bot');
+                region.owned = args[(i * 3) + 1] === settings.get('your_bot');
             }
         }
     },
