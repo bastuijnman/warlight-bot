@@ -1,5 +1,5 @@
 const REGION_MIN_SOLIERS = 8;
-const REGION_TRANSFER_NEEDS = 2;
+const REGION_TRANSFER_NEEDS = 5;
 const REGION_TRANSFER_VALUE = 0.3;
 
 var ioc = require('../../utilities/ioc'),
