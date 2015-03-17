@@ -1,5 +1,5 @@
 const REGION_MIN_SOLIERS = 8;
-const REGION_TRANSFER_NEEDS = 5;
+const REGION_TRANSFER_NEEDS = 2;
 const REGION_TRANSFER_VALUE = 0.3;
 
 var ioc = require('../../utilities/ioc'),
@@ -68,7 +68,7 @@ module.exports = {
                         '%s attack/transfer %d %d %d',
                         settings.get('your_bot'),
                         regions[region].name,
-                        neighbors[neighbors].name,
+                        neighbors[neighbor].name,
                         Math.floor(regions[region].troops * REGION_TRANSFER_VALUE)
                     ));
                     break;
