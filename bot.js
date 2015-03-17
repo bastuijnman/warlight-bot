@@ -53,9 +53,6 @@ bot = function () {
                         commands[cmd].apply(this, parts);
                     } else {
                         console.warn('command send, but not found in available bot commands. Command: ' + cmd);
-                        for (var part in parts) {
-                            console.log('INFO: ' + parts[part]);
-                        }
                     }
                 }
             }

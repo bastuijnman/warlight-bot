@@ -61,7 +61,6 @@ module.exports = {
                 selectedRegion = map.getRegion(best[region].name);
                 selectedRegion.owned = true;
                 selectedRegion.home = true;
-                console.log(map.regions);
                 return;
             }
         }
