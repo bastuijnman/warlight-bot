@@ -3,7 +3,8 @@
  */
 
 var ioc = require('../../utilities/ioc.js'),
-    utils = require('../../utilities/utils.js');
+    utils = require('../../utilities/utils.js'),
+    strategyManager = require('../strategyManager.js');
 
 module.exports = {
 
@@ -15,23 +16,15 @@ module.exports = {
     go: function (action) {
         var settings = ioc.resolve('settings'),
             map = ioc.resolve('map'),
-            io = ioc.resolve('io');
+            io = ioc.resolve('io'),
+            strategy = strategyManager.getStrategy();
 
         if (action === 'place_armies') {
-            var soldiers = parseInt(settings.get('starting_armies'), 10),
-                cmd = '';
-
-            for (var region in map.regions) {
-                if (map.regions[region].owned) {
-                    process.stdout.write(settings.get('your_bot') + ' place_armies ' + map.regions[region].name + ' ' + soldiers + '\n');
-                    return;
-                }
-            }
-            process.stdout.write('No moves \n');
+            strategy.place();
         }
 
         if (action === 'attack/transfer') {
-            process.stdout.write('No moves \n');
+            strategy.transfer();
         }
     },
 
@@ -39,6 +32,7 @@ module.exports = {
         var io = ioc.resolve('io'),
             map = ioc.resolve('map'),
             regions = map.regions,
+            allowedRegions = Array.prototype.slice.call(arguments, 1),
             best = regions.map(function (region) {
                 var bonus = region.parent ? region.parent.bonus : 0;
                 return {
@@ -53,9 +47,26 @@ module.exports = {
                     return 1;
                 }
                 return 0;
-            }).shift();
+            }),
+            region,
+            selectedRegion;
 
-        process.stdout.write(best.name + '\n');
+        for (region in best) {
+            if (allowedRegions.indexOf(best[region].name) > -1) {
+                process.stdout.write(best[region].name + '\n');
+
+                /**
+                 * Set properties
+                 */
+                selectedRegion = map.getRegion(best[region].name);
+                selectedRegion.owned = true;
+                selectedRegion.home = true;
+                console.log(map.regions);
+                return;
+            }
+        }
+
+        process.stdout.write('\n');
     },
 
     setupMap: function () {
