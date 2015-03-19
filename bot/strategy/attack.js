@@ -67,21 +67,24 @@ module.exports = {
              * regions have the most enemies surrounding them
              */
             attentionRegions = map.getOwnedRegions().map(function (region) {
-                var neighbourValue = region.neighbors.map(function (neighbor) {
-                    /**
-                     * This neighbor is owned, and so it doesnt add count to the threat value
-                     */
-                    if (neighbor.owned) {
-                        return 0;
-                    }
+                neighbourValue = 0;
+                if (region.neighbors.length > 0) {
+                    neighbourValue = region.neighbors.map(function (neighbor) {
+                        /**
+                         * This neighbor is owned, and so it doesnt add count to the threat value
+                         */
+                        if (neighbor.owned) {
+                            return 0;
+                        }
 
-                    /**
-                     * Count troops twice, to make this attribute more important
-                     */
-                    return (neighbor.troops * 2) + (neighbor.parent ? neighbor.parent.bonus : 0);
-                }).reduce(function (previous, current) {
-                    return previous + current;
-                });
+                        /**
+                         * Count troops twice, to make this attribute more important
+                         */
+                        return (neighbor.troops * 2) + (neighbor.parent ? neighbor.parent.bonus : 0);
+                    }).reduce(function (previous, current) {
+                        return previous + current;
+                    });
+                }
 
                 return {
                     name: region.name,
