@@ -1,5 +1,5 @@
 const REGION_MIN_SOLIERS = 8;
-const REGION_TRANSFER_NEEDS = 5;
+const REGION_TRANSFER_NEEDS = 6;
 const REGION_TRANSFER_VALUE = 0.3;
 
 var ioc = require('../../utilities/ioc'),
@@ -15,9 +15,14 @@ module.exports = {
                 return region.troops < REGION_MIN_SOLIERS;
             }),
             home = map.getHomeRegion(),
+            cmd = [],
             soldierPerRegion,
             soldierRemainder,
-            cmd;
+            regionRemaining,
+            attentionRegions,
+            attentionRegion,
+            totalThreat,
+            soldierPerThreatPoint;
 
         /**
          * IDEA
@@ -31,7 +36,7 @@ module.exports = {
              * need it. We also have a remainder which we will place on our home region.
              */
             soldierPerRegion = Math.floor(soldiers / regions.length);
-            if(soldierPerRegion === 0) {
+            if (soldierPerRegion === 0) {
                 soldierPerRegion = 1;
                 regions = regions.slice(0, soldiers);
             }
@@ -40,9 +45,75 @@ module.exports = {
             cmd = regions.map(function (region) {
                 return util.format('%s place_armies %d %d', settings.get('your_bot'), region.name, soldierPerRegion);
             });
+            /**
+             * We have some troops left over, let's donate those to the region which needs
+             * it the most.
+             */
+            regionRemaining = regions.sort(function (a, b) {
+                if (a.troops < b.troops) {
+                    return -1;
+                }
+                if (a.troops > b.troops) {
+                    return 1;
+                }
+                return 0;
+            }).shift();
+            cmd.push(util.format('%s place_armies %d %d', settings.get('your_bot'), regionRemaining.name, soldierRemainder));
+        }
 
-            if (home) {
-                cmd.push(util.format('%s place_armies %d %d', settings.get('your_bot'), home.name, soldierRemainder));
+        if (cmd.length === 0) {
+            /**
+             * There are no regions that need immediate strengthening, lets find which
+             * regions have the most enemies surrounding them
+             */
+            attentionRegions = map.getOwnedRegions().map(function (region) {
+                var neighbourValue = region.neighbors.map(function (neighbor) {
+                    /**
+                     * This neighbor is owned, and so it doesnt add count to the threat value
+                     */
+                    if (neighbor.owned) {
+                        return 0;
+                    }
+
+                    /**
+                     * Count troops twice, to make this attribute more important
+                     */
+                    return (neighbor.troops * 2) + (neighbor.parent ? neighbor.parent.bonus : 0);
+                }).reduce(function (previous, current) {
+                    return previous + current;
+                });
+
+                return {
+                    name: region.name,
+                    threat: neighbourValue + region.troops
+                }
+            });
+
+            totalThreat = attentionRegions.reduce(function (previous, current) {
+                if (typeof previous !== 'number') {
+                    previous = parseInt(previous.threat);
+                }
+                return previous + parseInt(current.threat);
+            });
+
+            soldierPerThreatPoint = soldiers / totalThreat;
+            soldierRemainder = soldiers;
+            attentionRegions.map(function (region) {
+                soldierRemainder -= Math.round(soldierPerThreatPoint * region.threat);
+                cmd.push(util.format('%s place_armies %d %d', settings.get('your_bot'), region.name, Math.round(soldierPerThreatPoint * region.threat)));
+            });
+
+            if (soldierRemainder > 0) {
+                attentionRegion = attentionRegions.sort(function (a, b) {
+                    if (a.threat > b.threat) {
+                        return -1;
+                    }
+                    if (a.threat < b.threat) {
+                        return 1;
+                    }
+                    return 0;
+                }).shift();
+                cmd.push(util.format('%s place_armies %d %d', settings.get('your_bot'), attentionRegion.name, soldierRemainder));
             }
         }
 
@@ -74,6 +145,10 @@ module.exports = {
                     break;
                 }
             }
+        }
+
+        if (cmd.length === 0) {
+            cmd = ['No moves'];
         }
 
         process.stdout.write(cmd.join(', ') + '\n');
